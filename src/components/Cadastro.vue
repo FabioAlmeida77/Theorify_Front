@@ -5,6 +5,9 @@
       <input v-model="email" type="email" id="email" placeholder="Digite o email" required>
       <input v-model="senha" type="password" id="senha" placeholder="Digite a senha" required>
       <input type="submit" value="Cadastrar">
+      <p class="criar-conta-link">Já tem conta?
+        <RouterLink to="/Login">Fazer Login</RouterLink>
+      </p>
     </form>
   </div>
 </template>
@@ -108,6 +111,21 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.criar-conta-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+.criar-conta-link a {
+  color: #007BFF;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.criar-conta-link a:hover {
+  text-decoration: underline;
 }
 </style>
 

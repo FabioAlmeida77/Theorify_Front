@@ -13,7 +13,7 @@
       </div>
       <button type="submit">Entrar</button>
       <p class="criar-conta-link">Não tem uma conta?
-        <a @click.prevent="$router.push('/Cadastro')" href="#">Criar conta</a>
+        <RouterLink to="/cadastro">Criar conta</RouterLink>
       </p>
     </form>
   </div>
