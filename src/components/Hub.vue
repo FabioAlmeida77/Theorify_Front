@@ -5,11 +5,11 @@
       <div>
         <div class="user-info">
           <img src="https://via.placeholder.com/80" alt="Usuário" class="user-avatar" />
-          <p class="user-name">Usuário</p>
+          <p class="user-name">{{ name_tag }}</p>
         </div>
 
         <nav class="menu">
-          <button class="menu-button">Teorias</button>
+          <button class="menu-button">Todos</button>
           <button class="menu-button">Filmes</button>
           <button class="menu-button">Séries</button>
           <button class="menu-button">Jogos</button>
@@ -31,14 +31,23 @@
 </template>
 
 <script>
-export default {
-  methods: {
-    sair() {
-      localStorage.removeItem('token');
-      this.$router.push('/login');
-    }
-  }
-};
+    export default {
+      data() {
+        return {
+          name_tag: ''
+        };
+      },
+      mounted() {
+        this.name_tag = localStorage.getItem('name_tag') || 'Usuário';
+      },
+      methods: {
+        sair() {
+          localStorage.removeItem('token');
+          localStorage.removeItem('name_tag');
+          this.$router.push('/login');
+        }
+      }
+    };
 </script>
 
 <style scoped>

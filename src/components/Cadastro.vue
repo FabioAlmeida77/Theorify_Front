@@ -33,6 +33,7 @@ export default {
         });
 
         alert('Usuário cadastrado com sucesso!');
+        localStorage.setItem('name_tag', this.name_tag);
         this.name_tag = '';
         this.email = '';
         this.senha = '';

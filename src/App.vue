@@ -9,6 +9,7 @@ import login from './components/Login.vue'
 import Cadastro from './components/Cadastro.vue';
 import Hub from './components/Hub.vue';
 import Feed from './components/Feed.vue';
+import CrimeBoard from './components/CrimeBoard.vue'
 
 export default {
   name: 'App',
@@ -16,7 +17,8 @@ export default {
     Cadastro,
     login,
     Hub,
-    Feed
+    Feed,
+    CrimeBoard
   }
 }
 </script>

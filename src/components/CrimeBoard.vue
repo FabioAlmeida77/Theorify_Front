@@ -1,0 +1,425 @@
+<template>
+  <div class="board" ref="board" @click="clearSelection">
+    <div
+      v-for="(item, index) in items"
+      :key="index"
+      class="card"
+      :class="{ selected: selectedCard === index }"
+      :style="{ top: item.y + 'px', left: item.x + 'px' }"
+      @mousedown="startDrag($event, index)"
+      @click.stop="selectCard(index)"
+    >
+      <div class="card-top-line"></div>
+      <div class="card-content">
+        <div>{{ item.name }}</div>
+        <div v-if="item.media && item.media.length" class="media-gallery">
+          <div
+            v-for="(media, mIndex) in item.media"
+            :key="mIndex"
+            class="media-item"
+          >
+            <img
+              v-if="media.type === 'image'"
+              :src="media.url"
+              alt="Imagem"
+              @click.stop="openModal(media.url)"
+            />
+            <video
+              v-else-if="media.type === 'video'"
+              :src="media.url"
+              controls
+              @click.stop
+            ></video>
+          </div>
+        </div>
+      </div>
+      <button @click.stop="removeCard(index)" class="remove-card-btn">🗑️</button>
+    </div>
+
+    <canvas ref="canvas" class="canvas"></canvas>
+
+    <div class="add-card-form">
+      <input v-model="newCardName" placeholder="Novo card..." />
+      <input type="file" multiple @change="handleMediaUpload" ref="fileInput" />
+      <button @click="addCard">Adicionar Card</button>
+    </div>
+
+    <!-- Modal para maximizar imagem -->
+    <div v-if="modalImageUrl" class="modal" @click="closeModal">
+      <img :src="modalImageUrl" alt="Imagem ampliada" />
+      <button class="modal-close-btn" @click.stop="closeModal">✖</button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue';
+
+defineOptions({ name: 'CrimeBoard' });
+
+const items = ref([
+  { name: 'Suspeito 1', x: 20, y: 20, media: [] },
+  { name: 'Vítima', x: 200, y: 100, media: [] },
+]);
+
+const newCardName = ref('');
+const mediaFiles = ref([]);
+const board = ref(null);
+const canvas = ref(null);
+const fileInput = ref(null);
+
+let dragging = null;
+let connections = ref([]);
+let selectedCard = ref(null);
+
+// Modal para imagem maximizada
+const modalImageUrl = ref(null);
+
+// Desenha as linhas entre cards conectados
+const drawLines = () => {
+  const ctx = canvas.value.getContext('2d');
+  ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
+
+  connections.value.forEach(([startIndex, endIndex]) => {
+    const start = items.value[startIndex];
+    const end = items.value[endIndex];
+
+    const startX = start.x + 75;
+    const startY = start.y + 5;
+    const endX = end.x + 75;
+    const endY = end.y + 5;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = '#c62828';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  });
+};
+
+// Acumula arquivos de mídia
+const handleMediaUpload = (event) => {
+  const files = Array.from(event.target.files);
+  const newMedia = files.map((file) => ({
+    url: URL.createObjectURL(file),
+    type: file.type.startsWith('video') ? 'video' : 'image',
+  }));
+  mediaFiles.value = [...mediaFiles.value, ...newMedia];
+  fileInput.value.value = null; // limpa input
+};
+
+// Adiciona novo card
+const addCard = () => {
+  if (newCardName.value.trim() !== '') {
+    items.value.push({
+      name: newCardName.value,
+      x: 50,
+      y: 50,
+      media: [...mediaFiles.value],
+    });
+    newCardName.value = '';
+    mediaFiles.value = [];
+  }
+};
+
+// Remove card e suas conexões
+const removeCard = (index) => {
+  items.value.splice(index, 1);
+  connections.value = connections.value
+    .filter(([s, e]) => s !== index && e !== index)
+    .map(([s, e]) => [
+      s > index ? s - 1 : s,
+      e > index ? e - 1 : e,
+    ]);
+  drawLines();
+};
+
+// Conecta dois cards
+const connectCards = (startIndex, endIndex) => {
+  if (
+    startIndex !== endIndex &&
+    !connections.value.some(
+      ([s, e]) =>
+        (s === startIndex && e === endIndex) ||
+        (s === endIndex && e === startIndex)
+    )
+  ) {
+    connections.value.push([startIndex, endIndex]);
+    drawLines();
+  }
+};
+
+// Desconecta cards
+const disconnectCards = (startIndex, endIndex) => {
+  connections.value = connections.value.filter(
+    ([s, e]) =>
+      !(
+        (s === startIndex && e === endIndex) ||
+        (s === endIndex && e === startIndex)
+      )
+  );
+  drawLines();
+};
+
+// Seleciona card e conecta/desconecta
+const selectCard = (index) => {
+  if (selectedCard.value === null) {
+    selectedCard.value = index;
+  } else {
+    const alreadyConnected = connections.value.some(
+      ([s, e]) =>
+        (s === selectedCard.value && e === index) ||
+        (s === index && e === selectedCard.value)
+    );
+
+    if (alreadyConnected) {
+      disconnectCards(selectedCard.value, index);
+    } else {
+      connectCards(selectedCard.value, index);
+    }
+
+    selectedCard.value = null;
+  }
+};
+
+const clearSelection = () => {
+  selectedCard.value = null;
+};
+
+// Funções para drag & drop dos cards
+const startDrag = (event, index) => {
+  dragging = { index, offsetX: event.offsetX, offsetY: event.offsetY };
+  window.addEventListener('mousemove', drag);
+  window.addEventListener('mouseup', stopDrag);
+};
+
+const drag = (event) => {
+  if (!dragging) return;
+  items.value[dragging.index].x = event.pageX - dragging.offsetX;
+  items.value[dragging.index].y = event.pageY - dragging.offsetY;
+  drawLines();
+};
+
+const stopDrag = () => {
+  dragging = null;
+  window.removeEventListener('mousemove', drag);
+  window.removeEventListener('mouseup', stopDrag);
+};
+
+// Abre modal com a imagem ampliada
+const openModal = (url) => {
+  modalImageUrl.value = url;
+};
+
+// Fecha modal
+const closeModal = () => {
+  modalImageUrl.value = null;
+};
+
+// Inicializa canvas e desenha linhas
+onMounted(() => {
+  const boardEl = board.value;
+  const canvasEl = canvas.value;
+  canvasEl.width = boardEl.offsetWidth;
+  canvasEl.height = boardEl.offsetHeight;
+  drawLines();
+});
+
+watch(items, drawLines, { deep: true });
+</script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(187, 145, 90);
+  background-image: url('https://www.transparenttextures.com/patterns/cork.png');
+  overflow: hidden;
+  border: 8px solid #2e1e12;
+}
+
+.card {
+  position: absolute;
+  background: #fffdfa;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: 'Special Elite', monospace;
+  font-size: 16px;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  transform: rotate(-1deg);
+  z-index: 1;
+  transition: transform 0.2s ease;
+  max-width: 350px;
+  width: auto;
+  min-height: 60px;
+  word-wrap: break-word;
+  color: #000;
+}
+
+.card.selected {
+  border: 2px solid #1976d2;
+  box-shadow: 0 0 10px #1976d2;
+  transform: scale(1.05) rotate(-1deg);
+  z-index: 3;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  z-index: 2;
+}
+
+.card .card-top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #808080;
+  border-radius: 4px 4px 0 0;
+}
+
+.card::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  top: -6px;
+  left: calc(50% - 6px);
+  box-shadow: 0 0 2px #000;
+  z-index: 10;
+}
+
+.card-content {
+  margin-bottom: 10px;
+}
+
+.media-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.media-item img,
+.media-item video {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-card-btn {
+  margin-top: 8px;
+  background: #d9534f;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  float: right;
+  font-size: 14px;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.add-card-form {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: #fffdfa;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: 'Special Elite', monospace;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.add-card-form input[type="text"] {
+  padding: 5px;
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.add-card-form input[type="file"] {
+  margin: 5px 0;
+}
+
+.add-card-form button {
+  padding: 5px 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Special Elite', monospace;
+}
+
+.add-card-form button:hover {
+  background-color: #45a049;
+}
+
+/* Modal para imagem maximizada */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 6px;
+  box-shadow: 0 0 15px #000;
+}
+
+.modal-close-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #d9534f;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  line-height: 32px;
+  text-align: center;
+  z-index: 10000;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: #c9302c;
+}
+</style>
