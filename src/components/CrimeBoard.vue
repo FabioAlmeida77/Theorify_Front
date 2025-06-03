@@ -54,6 +54,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import axios from 'axios';
 
 defineOptions({ name: 'CrimeBoard' });
 
@@ -104,22 +105,53 @@ const handleMediaUpload = (event) => {
   const newMedia = files.map((file) => ({
     url: URL.createObjectURL(file),
     type: file.type.startsWith('video') ? 'video' : 'image',
+    file: file, // importante para enviar depois
   }));
   mediaFiles.value = [...mediaFiles.value, ...newMedia];
-  fileInput.value.value = null; // limpa input
+  fileInput.value.value = null;
 };
 
 // Adiciona novo card
-const addCard = () => {
+const addCard = async () => {
   if (newCardName.value.trim() !== '') {
-    items.value.push({
-      name: newCardName.value,
-      x: 50,
-      y: 50,
-      media: [...mediaFiles.value],
-    });
-    newCardName.value = '';
-    mediaFiles.value = [];
+    const formData = new FormData();
+    formData.append('nome_card', newCardName.value); // API espera "nome_card"
+
+    // Separa a imagem e o vídeo dos arquivos de mídia
+    const imagem = mediaFiles.value.find(file => file.type === 'image');
+    const video = mediaFiles.value.find(file => file.type === 'video');
+
+    if (imagem && imagem.file) {
+      formData.append('foto', imagem.file); // API espera "foto"
+    }
+
+    if (video && video.file) {
+      formData.append('video', video.file); // API espera "video"
+    }
+
+    try {
+      const token = localStorage.getItem('token'); // ou onde você guarda o token
+      const response = await axios.post('http://localhost:3000/teorias/cad', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const newCardData = response.data;
+
+      items.value.push({
+        name: newCardData.nome_card, // volta como foi salvo
+        x: 50,
+        y: 50,
+        media: [...mediaFiles.value], // mantém a mídia no board
+      });
+
+      newCardName.value = '';
+      mediaFiles.value = [];
+    } catch (error) {
+      console.error('Erro ao salvar card:', error);
+    }
   }
 };
 
@@ -195,16 +227,36 @@ const startDrag = (event, index) => {
 };
 
 const drag = (event) => {
-  if (!dragging) return;
-  items.value[dragging.index].x = event.pageX - dragging.offsetX;
-  items.value[dragging.index].y = event.pageY - dragging.offsetY;
-  drawLines();
+  if (dragging !== null) {
+    const { index, offsetX, offsetY } = dragging;
+    items.value[index].x = event.clientX - offsetX;
+    items.value[index].y = event.clientY - offsetY;
+    resizeCanvas();
+  }
 };
 
-const stopDrag = () => {
-  dragging = null;
+const stopDrag = async () => {
   window.removeEventListener('mousemove', drag);
   window.removeEventListener('mouseup', stopDrag);
+
+  if (dragging !== null) {
+    const movedItem = items.value[dragging.index];
+
+    try {
+      await axios.put(`http://localhost:3000/teorias/${movedItem._id}`, {
+        x: movedItem.x,
+        y: movedItem.y,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar posição:', error);
+    }
+
+    dragging = null;
+  }
 };
 
 // Abre modal com a imagem ampliada
@@ -218,12 +270,30 @@ const closeModal = () => {
 };
 
 // Inicializa canvas e desenha linhas
-onMounted(() => {
-  const boardEl = board.value;
-  const canvasEl = canvas.value;
-  canvasEl.width = boardEl.offsetWidth;
-  canvasEl.height = boardEl.offsetHeight;
-  drawLines();
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token');
+
+    const response = await axios.get('http://localhost:3000/teorias', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const teorias = response.data;
+
+    items.value = teorias.map((teoria) => ({
+      name: teoria.nome_card,
+      x: 50, // ou teoria.x se tiver
+      y: 50, // ou teoria.y se tiver
+      media: [
+        ...(teoria.foto ? [teoria.foto] : []),
+        ...(teoria.video ? [teoria.video] : []),
+      ],
+    }));
+  } catch (error) {
+    console.error('Erro ao carregar teorias:', error);
+  }
 });
 
 watch(items, drawLines, { deep: true });
