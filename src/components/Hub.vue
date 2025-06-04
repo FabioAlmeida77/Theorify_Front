@@ -15,7 +15,7 @@
           <button class="menu-button">Jogos</button>
           <button class="menu-button">Novelas</button>
         </nav>
-
+        <RouterLink to="/Criacao">Criação de Teoria</RouterLink>
         <div class="logout">
           <button class="logout-button" @click="sair" title="Sair">⎋ Sair</button>
         </div>

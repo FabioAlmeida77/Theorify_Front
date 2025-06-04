@@ -35,6 +35,7 @@
       </div>
       <button @click.stop="removeCard(index)" class="remove-card-btn">🗑️</button>
     </div>
+    
 
     <canvas ref="canvas" class="canvas"></canvas>
 
@@ -42,6 +43,7 @@
       <input v-model="newCardName" placeholder="Novo card..." />
       <input type="file" multiple @change="handleMediaUpload" ref="fileInput" />
       <button @click="addCard">Adicionar Card</button>
+      <RouterLink to="/hub">Ir para o HUB</RouterLink>
     </div>
 
     <!-- Modal para maximizar imagem -->
@@ -57,7 +59,6 @@ import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 
 defineOptions({ name: 'CrimeBoard' });
-
 const items = ref([
   { name: 'Suspeito 1', x: 20, y: 20, media: [] },
   { name: 'Vítima', x: 200, y: 100, media: [] },
@@ -141,11 +142,14 @@ const addCard = async () => {
       const newCardData = response.data;
 
       items.value.push({
-        name: newCardData.nome_card, // volta como foi salvo
-        x: 50,
-        y: 50,
-        media: [...mediaFiles.value], // mantém a mídia no board
-      });
+        id: newCardData.id,                      // ID vindo do banco (essencial pro PUT)
+        name: newCardData.nome_card,            // Nome do card
+        x: newCardData.x,                       // Posição inicial do banco (pode ser 0)
+        y: newCardData.y,
+        foto: newCardData.foto,                 // Caminho da imagem no servidor
+        video: newCardData.video,               // Caminho do vídeo no servidor
+        media: [...mediaFiles.value],           // Mantém a mídia no board, se necessário
+    });
 
       newCardName.value = '';
       mediaFiles.value = [];
@@ -231,7 +235,6 @@ const drag = (event) => {
     const { index, offsetX, offsetY } = dragging;
     items.value[index].x = event.clientX - offsetX;
     items.value[index].y = event.clientY - offsetY;
-    resizeCanvas();
   }
 };
 
@@ -242,8 +245,14 @@ const stopDrag = async () => {
   if (dragging !== null) {
     const movedItem = items.value[dragging.index];
 
+    if (!movedItem.id) {
+      console.warn('Card sem ID, não pode ser atualizado.');
+      dragging = null;
+      return;
+    }
+
     try {
-      await axios.put(`http://localhost:3000/teorias/${movedItem._id}`, {
+      await axios.put(`http://localhost:3000/teorias/edit/${movedItem.id}`, {
         x: movedItem.x,
         y: movedItem.y,
       }, {
@@ -259,6 +268,7 @@ const stopDrag = async () => {
   }
 };
 
+
 // Abre modal com a imagem ampliada
 const openModal = (url) => {
   modalImageUrl.value = url;
@@ -273,26 +283,26 @@ const closeModal = () => {
 onMounted(async () => {
   try {
     const token = localStorage.getItem('token');
-
     const response = await axios.get('http://localhost:3000/teorias', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    const teorias = response.data;
-
-    items.value = teorias.map((teoria) => ({
-      name: teoria.nome_card,
-      x: 50, // ou teoria.x se tiver
-      y: 50, // ou teoria.y se tiver
+    items.value = response.data.map(card => ({
+      id: card.id,
+      name: card.nome_card,
+      x: card.x,
+      y: card.y,
+      foto: card.foto,
+      video: card.video,
       media: [
-        ...(teoria.foto ? [teoria.foto] : []),
-        ...(teoria.video ? [teoria.video] : []),
-      ],
+        ...(card.foto ? [{ type: 'image', path: card.foto }] : []),
+        ...(card.video ? [{ type: 'video', path: card.video }] : []),
+      ]
     }));
   } catch (error) {
-    console.error('Erro ao carregar teorias:', error);
+    console.error('Erro ao carregar cards:', error);
   }
 });
 
