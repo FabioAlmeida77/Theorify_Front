@@ -82,14 +82,24 @@ const drawLines = () => {
   const ctx = canvas.value.getContext('2d');
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-  connections.value.forEach(([startIndex, endIndex]) => {
-    const start = items.value[startIndex];
-    const end = items.value[endIndex];
+  const cardElements = board.value.querySelectorAll('.card');
+  const boardRect = board.value.getBoundingClientRect();
 
-    const startX = start.x + 75;
-    const startY = start.y + 5;
-    const endX = end.x + 75;
-    const endY = end.y + 5;
+  connections.value.forEach(([startIndex, endIndex]) => {
+    const startEl = cardElements[startIndex];
+    const endEl = cardElements[endIndex];
+
+    if (!startEl || !endEl) return;
+
+    const startRect = startEl.getBoundingClientRect();
+    const endRect = endEl.getBoundingClientRect();
+
+    // Calcula posição da tachinha (centro horizontal e 6px acima do topo)
+    const startX = startRect.left + startRect.width / 2 - boardRect.left;
+    const startY = startRect.top - 6 - boardRect.top;
+
+    const endX = endRect.left + endRect.width / 2 - boardRect.left;
+    const endY = endRect.top - 6 - boardRect.top;
 
     ctx.beginPath();
     ctx.moveTo(startX, startY);
@@ -160,15 +170,43 @@ const addCard = async () => {
 };
 
 // Remove card e suas conexões
-const removeCard = (index) => {
-  items.value.splice(index, 1);
-  connections.value = connections.value
-    .filter(([s, e]) => s !== index && e !== index)
-    .map(([s, e]) => [
-      s > index ? s - 1 : s,
-      e > index ? e - 1 : e,
-    ]);
-  drawLines();
+const token = localStorage.getItem('token');
+
+const removeCard = async (index) => {
+  const card = items.value[index];
+  console.log("Card a remover:", card);
+  const id = card.id; // ← ID do banco de dados
+
+  if (!id) {
+    console.warn('ID não encontrado para o card');
+    return;
+  }
+
+  if (!confirm(`Deseja excluir o card ?`)) return;
+
+  try {
+    await axios.delete(`http://localhost:3000/teorias/delete/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // Se sucesso, remove localmente
+    items.value.splice(index, 1);
+
+    connections.value = connections.value
+      .filter(([s, e]) => s !== index && e !== index)
+      .map(([s, e]) => [
+        s > index ? s - 1 : s,
+        e > index ? e - 1 : e,
+      ]);
+
+    drawLines();
+    alert('Card deletado com sucesso!');
+  } catch (error) {
+    console.error("Erro ao deletar card:", error);
+    alert("Erro ao deletar card");
+  }
 };
 
 // Conecta dois cards
@@ -235,6 +273,7 @@ const drag = (event) => {
     const { index, offsetX, offsetY } = dragging;
     items.value[index].x = event.clientX - offsetX;
     items.value[index].y = event.clientY - offsetY;
+    drawLines();
   }
 };
 
@@ -281,6 +320,8 @@ const closeModal = () => {
 
 // Inicializa canvas e desenha linhas
 onMounted(async () => {
+  canvas.value.width = board.value.offsetWidth;
+  canvas.value.height = board.value.offsetHeight;
   try {
     const token = localStorage.getItem('token');
     const response = await axios.get('http://localhost:3000/teorias', {
