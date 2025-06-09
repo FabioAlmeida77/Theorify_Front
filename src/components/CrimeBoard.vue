@@ -60,8 +60,7 @@ import axios from 'axios';
 
 defineOptions({ name: 'CrimeBoard' });
 const items = ref([
-  { name: 'Suspeito 1', x: 20, y: 20, media: [] },
-  { name: 'Vítima', x: 200, y: 100, media: [] },
+
 ]);
 
 const newCardName = ref('');
@@ -206,6 +205,7 @@ const removeCard = async (index) => {
   } catch (error) {
     console.error("Erro ao deletar card:", error);
     alert("Erro ao deletar card");
+    console.error("Erro ao deletar teoria:", error.message, error.stack);
   }
 };
 
@@ -338,14 +338,59 @@ onMounted(async () => {
       foto: card.foto,
       video: card.video,
       media: [
-        ...(card.foto ? [{ type: 'image', path: card.foto }] : []),
-        ...(card.video ? [{ type: 'video', path: card.video }] : []),
+         ...(card.foto ? [{ type: 'image', url: `http://localhost:3000/${card.foto}` }] : []),
+         ...(card.video ? [{ type: 'video', url: `http://localhost:3000/${card.video}` }] : []),
       ]
     }));
+    // Carrega as conexões
+    const lineRes = await axios.get('http://localhost:3000/lines', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Mapeia os IDs para índices atuais
+    const idToIndex = {};
+    items.value.forEach((item, i) => {
+      if (item.id) idToIndex[item.id] = i;
+    });
+
+    connections.value = lineRes.data
+      .map(line => {
+        const start = idToIndex[line.startCardId];
+        const end = idToIndex[line.endCardId];
+        return (start != null && end != null) ? [start, end] : null;
+      })
+      .filter(Boolean); // remove nulls
+
+    drawLines();
   } catch (error) {
     console.error('Erro ao carregar cards:', error);
   }
 });
+
+const saveConnections = async () => {
+  try {
+    const token = localStorage.getItem('token');
+
+    const linesToSave = connections.value.map(([startIndex, endIndex]) => ({
+      startCardId: items.value[startIndex].id,
+      endCardId: items.value[endIndex].id,
+    }));
+
+    await axios.post('http://localhost:3000/lines/save', {
+      lines: linesToSave,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log('🔗 Conexões salvas com sucesso!');
+  } catch (error) {
+    console.error('❌ Erro ao salvar conexões:', error);
+  }
+};
+
+watch(connections, saveConnections, { deep: true });
 
 watch(items, drawLines, { deep: true });
 </script>
