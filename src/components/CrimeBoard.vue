@@ -57,6 +57,26 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
+const route = useRoute(); 
+const boardId = route.params.id;
+
+watch(() => boardId, (newId) => {
+  console.log('ID mudou para:', newId);
+  // fazer algo com newId
+});
+function loadBoardContent(id) {
+  console.log('Carregando board com ID:', id);
+  // Aqui você faz a requisição para buscar os cards, por exemplo
+}
+
+watch(boardId, (id) => {
+  if (id) {
+    loadBoardContent(id);
+  } else {
+    console.warn('boardId não encontrado na rota.');
+  }
+}, { immediate: true });
 
 defineOptions({ name: 'CrimeBoard' });
 const items = ref([
@@ -127,6 +147,13 @@ const addCard = async () => {
     const formData = new FormData();
     formData.append('nome_card', newCardName.value); // API espera "nome_card"
 
+      if (!boardId) {
+      alert('ID do quadro (boardId) está ausente. Não é possível criar o card.');
+      return;
+    }
+
+    formData.append('boardId', boardId);
+
     // Separa a imagem e o vídeo dos arquivos de mídia
     const imagem = mediaFiles.value.find(file => file.type === 'image');
     const video = mediaFiles.value.find(file => file.type === 'video');
@@ -140,6 +167,7 @@ const addCard = async () => {
     }
 
     try {
+      
       const token = localStorage.getItem('token'); // ou onde você guarda o token
       const response = await axios.post('http://localhost:3000/teorias/cad', formData, {
         headers: {
@@ -324,11 +352,13 @@ onMounted(async () => {
   canvas.value.height = board.value.offsetHeight;
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3000/teorias', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const boardId = route.params.id;
+
+  const response = await axios.get(`http://localhost:3000/teorias/board/${boardId}`, {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
 
     items.value = response.data.map(card => ({
       id: card.id,
