@@ -373,7 +373,7 @@ onMounted(async () => {
       ]
     }));
     // Carrega as conexões
-    const lineRes = await axios.get('http://localhost:3000/lines', {
+    const lineRes = await axios.get(`http://localhost:3000/lines/board/${boardId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -393,21 +393,22 @@ onMounted(async () => {
 
     drawLines();
   } catch (error) {
-    console.error('Erro ao carregar cards:', error);
+    console.error('Erro ao carregar conexões:', error);
   }
 });
 
 const saveConnections = async () => {
   try {
-    const token = localStorage.getItem('token');
+    
 
     const linesToSave = connections.value.map(([startIndex, endIndex]) => ({
       startCardId: items.value[startIndex].id,
       endCardId: items.value[endIndex].id,
     }));
-
+    const token = localStorage.getItem('token');
     await axios.post('http://localhost:3000/lines/save', {
       lines: linesToSave,
+      boardId: parseInt(boardId, 10)
     }, {
       headers: {
         Authorization: `Bearer ${token}`,
