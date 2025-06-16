@@ -124,6 +124,8 @@ export default {
 </script>
 
 <style scoped>
+
+
 .hub-container {
   display: flex;
   height: 100vh;

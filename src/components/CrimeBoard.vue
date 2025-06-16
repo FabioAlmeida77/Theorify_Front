@@ -1,6 +1,7 @@
 <template>
   <div class="board" ref="board" @click="clearSelection">
-    <div
+    
+    <div 
       v-for="(item, index) in items"
       :key="index"
       class="card"
@@ -33,18 +34,23 @@
           </div>
         </div>
       </div>
+      <div v-if="loggedUserId === boardOwnerId">
       <button @click.stop="removeCard(index)" class="remove-card-btn">🗑️</button>
+      </div>
     </div>
     
 
     <canvas ref="canvas" class="canvas"></canvas>
 
-    <div class="add-card-form">
+    <div v-if="loggedUserId === boardOwnerId" class="add-card-form">
       <input v-model="newCardName" placeholder="Novo card..." />
       <input type="file" multiple @change="handleMediaUpload" ref="fileInput" />
       <button @click="addCard">Adicionar Card</button>
       <RouterLink to="/hub">Ir para o HUB</RouterLink>
     </div>
+
+    <div v-else class="add-card-form"><RouterLink to="/hub">Ir para o HUB</RouterLink></div>
+   
 
     <!-- Modal para maximizar imagem -->
     <div v-if="modalImageUrl" class="modal" @click="closeModal">
@@ -60,6 +66,9 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 const route = useRoute(); 
 const boardId = route.params.id;
+
+
+
 
 watch(() => boardId, (newId) => {
   console.log('ID mudou para:', newId);
@@ -195,6 +204,21 @@ const addCard = async () => {
     }
   }
 };
+
+const boardOwnerId = ref(null);
+
+onMounted(async () => {
+  const token = localStorage.getItem('token');
+  const response = await axios.get(`http://localhost:3000/boards/${boardId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  boardOwnerId.value = response.data.user_id;
+  
+  // Pegue o ID do usuário logado (do token ou estado global)
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  loggedUserId.value = payload.id;
+});
 
 // Remove card e suas conexões
 const token = localStorage.getItem('token');
