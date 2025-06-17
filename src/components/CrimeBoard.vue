@@ -58,6 +58,11 @@
       <button class="modal-close-btn" @click.stop="closeModal">✖</button>
     </div>
   </div>
+
+  <div class="add-comentario-form">
+    <input v-model="comentarioTexto" placeholder="Digite aqui seu comentário" id="comentarioTexto" >
+    <button @click="Comentar" >Comentar</button>
+  </div>
 </template>
 
 <script setup>
@@ -66,6 +71,7 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 const route = useRoute(); 
 const boardId = route.params.id;
+const comentarioTexto = ref('');
 
 
 
@@ -149,6 +155,36 @@ const handleMediaUpload = (event) => {
   mediaFiles.value = [...mediaFiles.value, ...newMedia];
   fileInput.value.value = null;
 };
+
+
+async function Comentar() {
+  const token = localStorage.getItem('token');
+
+  if (!boardId) {
+    alert('ID do quadro (boardId) está ausente. Não é possível criar o comentário.');
+    return;
+  }
+
+  const comentario = {
+    conteudo: comentarioTexto.value,
+    boardId: boardId
+  };
+
+  try {
+    const response = await axios.post('http://localhost:3000/comentario/cad', comentario, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+    });
+
+    console.log('Comentário salvo:', response.data);
+    comentarioTexto.value = '';  // limpa o campo após salvar
+  } catch (error) {
+    console.error('Erro ao salvar comentário:', error);
+  }
+}
+
 
 // Adiciona novo card
 const addCard = async () => {
@@ -643,4 +679,42 @@ html, body {
 .modal-close-btn:hover {
   background-color: #c9302c;
 }
+
+
+.add-comentario-form {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: #fffdfa;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: 'Special Elite', monospace;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  margin-left: 170vh;
+}
+
+.add-ccomentario-form input[type="text"] {
+  padding: 5px;
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.add-comentario-form input[type="file"] {
+  margin: 5px 0;
+}
+
+.add-comentario-form button {
+  padding: 5px 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Special Elite', monospace;
+}
+
+.add-comentario-form button:hover {
+  background-color: #45a049;
+}
+
 </style>
