@@ -63,6 +63,17 @@
     <input v-model="comentarioTexto" placeholder="Digite aqui seu comentário" id="comentarioTexto" >
     <button @click="Comentar" >Comentar</button>
   </div>
+
+ <div class="comentarios-container">
+  <div
+    v-for="comentario in comentarios"
+    :key="comentario.id"
+    class="comentario-card"
+  >
+    <strong>{{ comentario.User?.name_tag || 'Usuário desconhecido' }}</strong>
+    <p>{{ comentario.conteudo }}</p>
+  </div>
+</div>
 </template>
 
 <script setup>
@@ -72,9 +83,7 @@ import { useRoute } from 'vue-router';
 const route = useRoute(); 
 const boardId = route.params.id;
 const comentarioTexto = ref('');
-
-
-
+const comentarios = ref([]);
 
 watch(() => boardId, (newId) => {
   console.log('ID mudou para:', newId);
@@ -183,6 +192,7 @@ async function Comentar() {
   } catch (error) {
     console.error('Erro ao salvar comentário:', error);
   }
+  await carregarComentarios();
 }
 
 
@@ -241,6 +251,19 @@ const addCard = async () => {
   }
 };
 
+// Buscar comentários do backend
+const carregarComentarios = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`http://localhost:3000/comentario/board/${boardId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    comentarios.value = response.data;
+  } catch (error) {
+    console.error("Erro ao carregar comentários:", error);
+  }
+};
 const boardOwnerId = ref(null);
 
 onMounted(async () => {
@@ -254,6 +277,7 @@ onMounted(async () => {
   // Pegue o ID do usuário logado (do token ou estado global)
   const payload = JSON.parse(atob(token.split('.')[1]));
   loggedUserId.value = payload.id;
+
 });
 
 // Remove card e suas conexões
@@ -432,6 +456,8 @@ onMounted(async () => {
          ...(card.video ? [{ type: 'video', url: `http://localhost:3000/${card.video}` }] : []),
       ]
     }));
+
+    await carregarComentarios();
     // Carrega as conexões
     const lineRes = await axios.get(`http://localhost:3000/lines/board/${boardId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -691,6 +717,7 @@ html, body {
   font-family: 'Special Elite', monospace;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
   margin-left: 170vh;
+  right: 40px; /* afasta da borda direita */
 }
 
 .add-ccomentario-form input[type="text"] {
@@ -716,5 +743,32 @@ html, body {
 .add-comentario-form button:hover {
   background-color: #45a049;
 }
+.comentarios-container {
+  position: absolute;
+  bottom: 90px;
+  right: 40px; /* afasta da borda direita */
+  max-height: 300px;
+  width: 320px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f7f7f7;
+  border-radius: 8px;
+  font-family: 'Special Elite', monospace;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  color: #373737;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
 
+.comentario-card {
+  background: white;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-left: 4px solid #4f46e5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.4; /* Melhora a leitura */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal; /* Permite quebra de linha */
+}
 </style>
