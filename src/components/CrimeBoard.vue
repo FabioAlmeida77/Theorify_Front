@@ -72,8 +72,28 @@
   >
     <strong>{{ comentario.User?.name_tag || 'Usuário desconhecido' }}</strong>
     <p>{{ comentario.conteudo }}</p>
+
+    <!-- Botões de ação -->
+    <div class="comentario-acoes">
+      <!-- Editar: só o autor -->
+      <button 
+        v-if="comentario.userId === loggedUserId" 
+        @click="editarComentario(comentario)"
+      >
+        ✏️ Editar
+      </button>
+
+      <!-- Excluir: autor OU dono do board -->
+      <button 
+        v-if="comentario.userId === loggedUserId || boardOwnerId === loggedUserId" 
+        @click="excluirComentario(comentario.id)"
+      >
+        🗑️ Excluir
+      </button>
+    </div>
   </div>
 </div>
+
 </template>
 
 <script setup>
@@ -194,7 +214,42 @@ async function Comentar() {
   }
   await carregarComentarios();
 }
+//excluir comentario
+  const excluirComentario = async (id) => {
+  const confirmar = confirm("Tem certeza que deseja excluir este comentário?");
+  if (!confirmar) return;
 
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/comentario/delete/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    await carregarComentarios(); // atualiza lista
+  } catch (error) {
+    console.error("Erro ao excluir comentário:", error);
+    alert("Erro ao excluir comentário.");
+  }
+};
+//editar comentario
+const editarComentario = async (comentario) => {
+  const novoConteudo = prompt("Edite o comentário:", comentario.conteudo);
+  if (!novoConteudo || novoConteudo === comentario.conteudo) return;
+
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(`http://localhost:3000/comentario/edit/${comentario.id}`, {
+      conteudo: novoConteudo
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    await carregarComentarios(); // atualiza lista
+  } catch (error) {
+    console.error("Erro ao editar comentário:", error);
+    alert("Erro ao editar comentário.");
+  }
+};
 
 // Adiciona novo card
 const addCard = async () => {
@@ -700,6 +755,11 @@ html, body {
   text-align: center;
   z-index: 10000;
   transition: background-color 0.2s ease;
+}
+.comentario-acoes {
+  display: flex;
+  gap: 10px; /* controla a distância entre os botões */
+  margin-top: 5px; /* opcional, para afastar do comentário */
 }
 
 .modal-close-btn:hover {

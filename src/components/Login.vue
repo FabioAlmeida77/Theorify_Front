@@ -31,29 +31,32 @@ export default {
     };
   },
   methods: {
-    async fazerLogin() {
-      try {
-        const response = await axios.post('http://localhost:3000/login', {
-          email: this.email,
-          senha: this.senha
-        });
+  async fazerLogin() {
+    try {
+      const response = await axios.post('http://localhost:3000/login', {
+        email: this.email,
+        senha: this.senha
+      });
 
-        const token = response.data.token;
-        localStorage.setItem('token', token);
+      const token = response.data.token;
+      const name_tag = response.data.user.name_tag;
 
-        alert('Login bem-sucedido!');
-        this.$router.push('/hub');
+      localStorage.setItem('token', token);
+      localStorage.setItem('name_tag', name_tag);
 
-      } catch (error) {
-        console.error('Erro no login:', error);
-        if (error.response && error.response.data && error.response.data.mensagem) {
-          alert(error.response.data.mensagem);
-        } else {
-          alert('Erro ao fazer login');
-        }
+      alert('Login bem-sucedido!');
+      this.$router.push('/hub');
+
+    } catch (error) {
+      console.error('Erro no login:', error);
+      if (error.response && error.response.data && error.response.data.mensagem) {
+        alert(error.response.data.mensagem);
+      } else {
+        alert('Erro ao fazer login');
       }
     }
   }
+}
 };
 </script>
 

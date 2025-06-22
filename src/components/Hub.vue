@@ -2,7 +2,8 @@
   <div class="hub-container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div>
+      <div class="sidebar-content">
+        <!-- Conteúdo do topo -->
         <div class="user-info">
           <img src="https://via.placeholder.com/80" alt="Usuário" class="user-avatar" />
           <p class="user-name">{{ name_tag }}</p>
@@ -18,10 +19,11 @@
 
         <input v-model="novoTitulo" placeholder="Digite o título do board" />
         <button @click="criarBoard">Criar novo board</button>
+      </div>
 
-        <div class="logout">
-          <button id="sair" class="logout-button" @click="sair" title="Sair">⎋ Sair</button>
-        </div>
+      <!-- Botão de sair no rodapé da sidebar -->
+      <div class="logout">
+        <button id="sair" class="logout-button" @click="sair" title="Sair">⎋ Sair</button>
       </div>
     </aside>
 
@@ -38,12 +40,7 @@
         </div>
 
         <div v-else class="boards-grid">
-          <div 
-            v-for="board in boardsPublicos" 
-            :key="board.id" 
-            class="board-card"
-            @click="abrirBoard(board.id)"
-          >
+          <div v-for="board in boardsPublicos" :key="board.id" class="board-card" @click="abrirBoard(board.id)">
             <h3>{{ board.title }}</h3>
             <p>Criado por: {{ board.User?.name_tag || 'Anônimo' }}</p>
           </div>
@@ -125,7 +122,6 @@ export default {
 
 <style scoped>
 
-
 .hub-container {
   display: flex;
   height: 100vh;
@@ -134,17 +130,6 @@ export default {
   left: 0px;
   top: 0px;
   padding: 0px;
-}
-
-.sidebar {
-  width: 250px;
-  background-color: #1e1e2f;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-  height: 100vh;
 }
 
 .user-info {
@@ -184,26 +169,6 @@ export default {
   background-color: #3f3f6b;
 }
 
-.logout {
-  padding-top: 30px;
-  margin-top: 50vh;
-}
-
-.logout-button {
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  transition: background-color 0.2s;
-}
-
-.logout-button:hover {
-  background-color: #ff1a1a;
-}
-
 .main-content {
   flex: 1;
   padding: 40px;
@@ -222,7 +187,7 @@ export default {
 .board-card {
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   padding: 16px;
   width: 220px;
   cursor: pointer;
@@ -230,10 +195,46 @@ export default {
 }
 
 .board-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-#sair{
+#sair {
   margin-top: -200vh;
 }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* joga o botão para o final */
+  padding: 20px;
+  width: 250px;
+  background-color: rgba(70, 46, 16, 0.836);
+  height: 100vh;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.logout {
+  padding-top: 10px;
+}
+
+.logout-button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #ff1a1a;
+}
+
 </style>
