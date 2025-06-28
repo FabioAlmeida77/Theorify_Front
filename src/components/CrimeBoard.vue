@@ -45,12 +45,11 @@
     <div v-if="loggedUserId === boardOwnerId" class="add-card-form">
       <input v-model="newCardName" placeholder="Novo card..." />
       <input type="file" multiple @change="handleMediaUpload" ref="fileInput" />
-      <button @click="addCard">Adicionar Card</button>
-      <RouterLink to="/hub">Ir para o HUB</RouterLink>
+      <div class="botao-container">
+        <button @click="addCard">Adicionar Card</button>
+        <RouterLink class="secondary-btn" to="/hub">Ir para o HUB</RouterLink>
+      </div>
     </div>
-
-    <div v-else class="add-card-form"><RouterLink to="/hub">Ir para o HUB</RouterLink></div>
-   
 
     <!-- Modal para maximizar imagem -->
     <div v-if="modalImageUrl" class="modal" @click="closeModal">
@@ -688,36 +687,84 @@ html, body {
   bottom: 20px;
   left: 20px;
   background: #fffdfa;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 16px 20px;
+  border-radius: 8px;
   font-family: 'Special Elite', monospace;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  border: 2px solid #d6c7a3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
 }
 
-.add-card-form input[type="text"] {
-  padding: 5px;
-  margin-right: 5px;
-  font-size: 14px;
-}
-
+.add-card-form input[type="text"],
 .add-card-form input[type="file"] {
-  margin: 5px 0;
+  padding: 10px;
+  font-size: 15px;
+  font-family: 'Special Elite', monospace;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fdfdfc;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.add-card-form input[type="text"]:focus,
+.add-card-form input[type="file"]:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);
 }
 
 .add-card-form button {
-  padding: 5px 10px;
+  padding: 10px 14px;
   background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-family: 'Special Elite', monospace;
+  font-size: 15px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .add-card-form button:hover {
   background-color: #45a049;
 }
 
+.add-card-form button:active {
+  transform: scale(0.98);
+}
+.secondary-btn {
+  padding: 8px 16px;
+  background: linear-gradient(to right, #5a8f49, #6fbf4d);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Special Elite', monospace;
+  font-size: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+
+.add-card-form button:hover,
+.secondary-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right, #4e8d3f, #63a842);
+}
+
+.add-card-form button:active,
+.secondary-btn:active {
+  transform: scale(0.97);
+}
+.botao-container {
+  display: flex;
+  gap: 12px; /* controla a distância entre os botões */
+  margin-top: 10px; /* opcional: dá espaço acima */
+}
 /* Modal para imagem maximizada */
 .modal {
   position: fixed;
@@ -775,7 +822,7 @@ html, body {
   padding: 10px;
   border-radius: 4px;
   font-family: 'Special Elite', monospace;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 5px rgba(43, 40, 40, 0.3);
   margin-left: 170vh;
   right: 40px; /* afasta da borda direita */
 }

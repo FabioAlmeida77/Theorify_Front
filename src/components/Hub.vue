@@ -1,9 +1,11 @@
 <template>
+
   <div class="hub-container">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-content">
         <div class="user-info">
+          <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuário" class="user-avatar" />
           <p class="user-name">{{ name_tag }}</p>
         </div>
 
@@ -308,13 +310,24 @@ export default {
 
 /* Barra de busca */
 .search-bar {
-  padding: 10px;
   width: 100%;
-  max-width: 400px;
-  margin: 10px 0 20px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
+  max-width: 600px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.search-bar::placeholder {
+  color: #888;
+}
+
+.search-bar:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.4); /* similar à cor #ffc107 */
 }
 
 /* Formulário flutuante */
@@ -359,4 +372,5 @@ export default {
 .floating-form button:hover {
   background-color: #ff1a1a;
 }
+
 </style>

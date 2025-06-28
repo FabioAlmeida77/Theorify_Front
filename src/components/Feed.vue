@@ -1,56 +1,53 @@
 <template>
-  <div class="feed">
-    <h1>Feed de Teorias</h1>
+  <div class="feed feed-container">
+    <h1>Apresentação do Projeto</h1>
 
-    <div v-if="carregando">
-      <p>Carregando teorias...</p>
+    <div class="teoria-card">
+      <h3>📌 Objetivo do Projeto</h3>
+      <p>
+        Este projeto foi desenvolvido como um quadro interativo estilo "crime board", com cartões arrastáveis,
+        mídias e comentários. Ele serve para organizar e visualizar ideias de forma dinâmica e intuitiva.
+      </p>
     </div>
 
-    <div v-else-if="teorias.length === 0">
-      <p>Nenhuma teoria publicada ainda.</p>
+    <div class="teoria-card">
+      <h3>🛠️ Tecnologias Utilizadas</h3>
+      <p>
+        - Vue.js 2 com Vue CLI<br>
+        - Node.js (backend)<br>
+        - Express + JWT para autenticação<br>
+        - Axios para comunicação entre front-end e API<br>
+        - CSS puro com uso de fontes customizadas e textura de fundo<br>
+        - LocalStorage para controle de sessão
+      </p>
     </div>
 
-    <div v-else>
-      <div v-for="teoria in teorias" :key="teoria.id" class="teoria">
-        <h3>{{ teoria.titulo }}</h3>
-        <p>{{ teoria.conteudo }}</p>
-        <small>Por: {{ teoria.name_tag }}</small>
-      </div>
+    <div class="teoria-card">
+      <h3>📂 Organização do Código</h3>
+      <p>
+        O sistema é dividido em componentes como: quadro, cartões, formulários de mídia e comentários, conexão visual
+        entre os cards com canvas, etc.
+      </p>
+    </div>
+
+    <div class="teoria-card">
+      <h3>🔗 Repositório no GitHub</h3>
+      <p>
+        Você pode acessar o código completo e contribuir através do repositório:
+        <a href="https://github.com/seu-usuario/seu-projeto" target="_blank">github.com/seu-usuario/seu-projeto</a>
+      </p>
+    </div>
+
+    <div class="teoria-card">
+      <h3>💬 Considerações Finais</h3>
+      <p>
+        Este projeto foi uma ótima oportunidade para aplicar conhecimentos de front-end, lógica de interação e design
+        de interface. Também permitiu explorar controle de estado e manipulação direta do DOM via canvas.
+      </p>
     </div>
   </div>
 </template>
 
-<script>
-import axios from 'axios';
-
-export default {
-  name: 'Feed',
-  data() {
-    return {
-      teorias: [],
-      carregando: true // novo estado
-    };
-  },
-  mounted() {
-    const token = localStorage.getItem('token');
-
-    axios.get('http://localhost:3000/teorias', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    .then(response => {
-      this.teorias = response.data;
-    })
-    .catch(error => {
-      console.error('Erro ao buscar teorias:', error);
-    })
-    .finally(() => {
-      this.carregando = false;
-    });
-  }
-};
-</script>
 
 <style>
 .feed-container {
@@ -58,22 +55,35 @@ export default {
   margin: auto;
   padding: 20px;
 }
+
 .teoria-card {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  background: #fffdfa;
+  color: #333;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.15);
+  font-family: 'Special Elite', monospace;
+  line-height: 1.6;
 }
-.autor {
-  font-size: 0.9em;
-  color: #666;
+
+.teoria-card h3 {
+  margin-top: 0;
+  color: #222;
 }
-.conteudo {
-  margin: 10px 0;
+
+.teoria-card a {
+  color: #4caf50;
+  text-decoration: none;
 }
-.data {
-  font-size: 0.8em;
-  color: #999;
+
+.teoria-card a:hover {
+  text-decoration: underline;
+}
+.feed h1 {
+  color: #222;
+  font-size: 28px;
+  margin-bottom: 20px;
+  font-family: 'Special Elite', monospace;
 }
 </style>
