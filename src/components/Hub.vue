@@ -52,6 +52,8 @@
             <p><strong>Descrição:</strong> {{ board.descricao }}</p>
             <p><strong>Categoria:</strong> {{ board.categoria }}</p>
             <p class="board-author">Criado por: {{ board.User?.name_tag || 'Anônimo' }}</p>
+            
+            <button class="delete-button" @click.stop="deletarBoard(board.id)">Deletar</button>
           </div>
         </div>
       </section>
@@ -93,6 +95,23 @@ export default {
     this.buscarBoardsPublicos();
   },
   methods: {
+    async deletarBoard(id) {
+  const token = localStorage.getItem('token');
+  try {
+    await axios.delete(`http://localhost:3000/boards/delete/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    console.log("Board deletado com sucesso!");
+
+    // Remove o board deletado das listas locais
+    this.todosBoards = this.todosBoards.filter(board => board.id !== id);
+    this.boardsPublicos = this.boardsPublicos.filter(board => board.id !== id);
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+,
     async buscarBoardsPublicos() {
       try {
         const response = await axios.get('http://localhost:3000/boards/public');
@@ -372,5 +391,6 @@ export default {
 .floating-form button:hover {
   background-color: #ff1a1a;
 }
+
 
 </style>
