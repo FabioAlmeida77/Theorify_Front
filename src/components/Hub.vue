@@ -52,13 +52,29 @@
             <p><strong>Descrição:</strong> {{ board.descricao }}</p>
             <p><strong>Categoria:</strong> {{ board.categoria }}</p>
             <p class="board-author">Criado por: {{ board.User?.name_tag || 'Anônimo' }}</p>
-            
+            <div class="button-group">
             <button class="delete-button" @click.stop="deletarBoard(board.id)">Deletar</button>
+            <button class="edit-button" @click.stop="prepararEdicao(board)">Editar</button>
+            </div>
           </div>
         </div>
       </section>
-    </main>
 
+    </main>
+    <div v-if="modoEdicao" class="edit-form">
+    <h3>Editar Teoria</h3>
+    <input v-model="formEdicao.title" placeholder="Título" />
+    <input v-model="formEdicao.descricao" placeholder="Descrição" />
+    <select v-model="formEdicao.categoria">
+      <option disabled value="">Selecione a categoria</option>
+      <option v-for="cat in categoriasDisponiveis" :key="cat">{{ cat }}</option>
+    </select>
+    <div class="button-group">
+    <button @click="editarBoard">Salvar</button>
+    <button @click="cancelarEdicao">Cancelar</button>
+    </div>
+  </div>
+  
     <!-- Formulário flutuante no canto inferior direito -->
     <div class="floating-form">
       <input v-model="novoTitulo" placeholder="Título do board" />
@@ -72,6 +88,7 @@
       <button @click="criarBoard">Criar Board</button>
     </div>
   </div>
+
 </template>
 
 <script>
@@ -87,7 +104,14 @@ export default {
       novaDescricao: '',
       novaCategoria: '',
       termoBusca: '',
-      categoriasDisponiveis: ['Filmes', 'Séries', 'Jogos', 'Novelas']
+      categoriasDisponiveis: ['Filmes', 'Séries', 'Jogos', 'Novelas'],
+      modoEdicao: false,
+      formEdicao: {
+      id: null,
+      title: '',
+      descricao: '',
+      categoria: ''
+      }
     };
   },
   mounted() {
@@ -167,7 +191,50 @@ export default {
       localStorage.removeItem('token');
       localStorage.removeItem('name_tag');
       this.$router.push('/login');
+    },
+    prepararEdicao(board) {
+  this.formEdicao = {
+    id: board.id,
+    title: board.title,
+    descricao: board.descricao,
+    categoria: board.categoria
+  };
+  this.modoEdicao = true;
+},
+
+cancelarEdicao() {
+  this.modoEdicao = false;
+  this.formEdicao = { id: null, title: '', descricao: '', categoria: '' };
+},
+
+    async editarBoard() {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.put(`http://localhost:3000/boards/edit/${this.formEdicao.id}`, {
+        title: this.formEdicao.title,
+        descricao: this.formEdicao.descricao,
+        categoria: this.formEdicao.categoria
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log("Board editado com sucesso!");
+
+      // Atualiza os boards na lista local
+      this.todosBoards = this.todosBoards.map(board =>
+        board.id === this.formEdicao.id ? { ...board, ...this.formEdicao } : board
+      );
+      this.boardsPublicos = this.boardsPublicos.map(board =>
+        board.id === this.formEdicao.id ? { ...board, ...this.formEdicao } : board
+      );
+
+      this.cancelarEdicao();
+
+    } catch (error) {
+      console.log(error);
     }
+  }
+
   },
   computed: {
     boardsFiltrados() {
@@ -391,6 +458,30 @@ export default {
 .floating-form button:hover {
   background-color: #ff1a1a;
 }
+.button-group {
+  display: flex;
+  gap: 20px; /* Espaço entre os botões */
+  margin-top: 10px;
+}
 
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  
+}
+
+.edit-button {
+  background-color: #f1c40f;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  
+}
 
 </style>
