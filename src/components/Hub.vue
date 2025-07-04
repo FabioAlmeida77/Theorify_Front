@@ -122,7 +122,7 @@ export default {
     async deletarBoard(id) {
   const token = localStorage.getItem('token');
   try {
-    await axios.delete(`http://localhost:3000/boards/delete/${id}`, {
+    await axios.delete(`https://rede-theorify.onrender.com/boards/delete/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     console.log("Board deletado com sucesso!");
@@ -138,7 +138,7 @@ export default {
 ,
     async buscarBoardsPublicos() {
       try {
-        const response = await axios.get('http://localhost:3000/boards/public');
+        const response = await axios.get('https://rede-theorify.onrender.com/boards/public');
         this.todosBoards = response.data;
         this.boardsPublicos = response.data;
       } catch (error) {
@@ -173,7 +173,7 @@ export default {
         }
 
         const response = await axios.post(
-          'http://localhost:3000/boards/create',
+          'https://rede-theorify.onrender.com/boards/create',
           { title, descricao, categoria },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -210,7 +210,7 @@ cancelarEdicao() {
     async editarBoard() {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`http://localhost:3000/boards/edit/${this.formEdicao.id}`, {
+      await axios.put(`https://rede-theorify.onrender.com/boards/edit/${this.formEdicao.id}`, {
         title: this.formEdicao.title,
         descricao: this.formEdicao.descricao,
         categoria: this.formEdicao.categoria

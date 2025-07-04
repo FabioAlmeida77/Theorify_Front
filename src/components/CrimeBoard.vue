@@ -199,7 +199,7 @@ async function Comentar() {
   };
 
   try {
-    const response = await axios.post('http://localhost:3000/comentario/cad', comentario, {
+    const response = await axios.post('https://rede-theorify.onrender.com/comentario/cad', comentario, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -220,7 +220,7 @@ async function Comentar() {
 
   try {
     const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:3000/comentario/delete/${id}`, {
+    await axios.delete(`https://rede-theorify.onrender.com/comentario/delete/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -237,7 +237,7 @@ const editarComentario = async (comentario) => {
 
   try {
     const token = localStorage.getItem('token');
-    await axios.put(`http://localhost:3000/comentario/edit/${comentario.id}`, {
+    await axios.put(`https://rede-theorify.onrender.com/comentario/edit/${comentario.id}`, {
       conteudo: novoConteudo
     }, {
       headers: { Authorization: `Bearer ${token}` }
@@ -278,7 +278,7 @@ const addCard = async () => {
     try {
       
       const token = localStorage.getItem('token'); // ou onde você guarda o token
-      const response = await axios.post('http://localhost:3000/teorias/cad', formData, {
+      const response = await axios.post('https://rede-theorify.onrender.com/teorias/cad', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -309,7 +309,7 @@ const addCard = async () => {
 const carregarComentarios = async () => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`http://localhost:3000/comentario/board/${boardId}`, {
+    const response = await axios.get(`https://rede-theorify.onrender.com/comentario/board/${boardId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -322,7 +322,7 @@ const boardOwnerId = ref(null);
 
 onMounted(async () => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`http://localhost:3000/boards/${boardId}`, {
+  const response = await axios.get(`https://rede-theorify.onrender.com/boards/${boardId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -350,7 +350,7 @@ const removeCard = async (index) => {
   if (!confirm(`Deseja excluir o card ?`)) return;
 
   try {
-    await axios.delete(`http://localhost:3000/teorias/delete/${id}`, {
+    await axios.delete(`https://rede-theorify.onrender.com/teorias/delete/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -457,7 +457,7 @@ const stopDrag = async () => {
     }
 
     try {
-      await axios.put(`http://localhost:3000/teorias/edit/${movedItem.id}`, {
+      await axios.put(`https://rede-theorify.onrender.com/teorias/edit/${movedItem.id}`, {
         x: movedItem.x,
         y: movedItem.y,
       }, {
@@ -492,7 +492,7 @@ onMounted(async () => {
     const token = localStorage.getItem('token');
     const boardId = route.params.id;
 
-  const response = await axios.get(`http://localhost:3000/teorias/board/${boardId}`, {
+  const response = await axios.get(`https://rede-theorify.onrender.com/teorias/board/${boardId}`, {
   headers: {
     Authorization: `Bearer ${token}`
   }
@@ -506,14 +506,14 @@ onMounted(async () => {
       foto: card.foto,
       video: card.video,
       media: [
-         ...(card.foto ? [{ type: 'image', url: `http://localhost:3000/${card.foto}` }] : []),
-         ...(card.video ? [{ type: 'video', url: `http://localhost:3000/${card.video}` }] : []),
+         ...(card.foto ? [{ type: 'image', url: `https://rede-theorify.onrender.com/${card.foto}` }] : []),
+         ...(card.video ? [{ type: 'video', url: `https://rede-theorify.onrender.com/${card.video}` }] : []),
       ]
     }));
 
     await carregarComentarios();
     // Carrega as conexões
-    const lineRes = await axios.get(`http://localhost:3000/lines/board/${boardId}`, {
+    const lineRes = await axios.get(`https://rede-theorify.onrender.com/lines/board/${boardId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -546,7 +546,7 @@ const saveConnections = async () => {
       endCardId: items.value[endIndex].id,
     }));
     const token = localStorage.getItem('token');
-    await axios.post('http://localhost:3000/lines/save', {
+    await axios.post('https://rede-theorify.onrender.com/lines/save', {
       lines: linesToSave,
       boardId: parseInt(boardId, 10)
     }, {
