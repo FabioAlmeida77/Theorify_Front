@@ -33,7 +33,7 @@ export default {
   methods: {
   async fazerLogin() {
     try {
-      const response = await axios.post('http://localhost:3000/login', {
+      const response = await axios.post('https://rede-theorify.onrender.com/login', {
         email: this.email,
         senha: this.senha
       });

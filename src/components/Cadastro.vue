@@ -26,7 +26,7 @@ export default {
   methods: {
     async cadastrar() {
       try {
-        const response = await axios.post('http://localhost:3000/user/cad', {
+        const response = await axios.post('https://rede-theorify.onrender.com/user/cad', {
           name_tag: this.name_tag,
           email: this.email,
           senha: this.senha
